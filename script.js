@@ -9,7 +9,7 @@ f.text().then(t=>{let d;try{d=JSON.parse(t)}catch(e){setStatus("err","❌ Invali
 if(isNew(d)){result=d;setStatus("ok","✓ This layout is already compatible with Zalith Launcher 2.",count(d)+" controls");showPreview(d);download.hidden=false;return}
 if(!isOld(d)){setStatus("err","❌ Unsupported layout format.","The file is not a supported Zalith Launcher 1 / PojavLauncher layout.");return}
 setStatus("warn","Detected: Zalith Launcher 1 / PojavLauncher","Press Convert to transform it.");convert.hidden=false;
-convert.onclick=()=>{try{result=convertOld(d);setStatus("ok","✓ Conversion successful",result._count+" controls converted");for(const w of result._warnings){const x=document.createElement("div");x.className="warning";x.textContent="⚠ "+w;warnings.appendChild(x)}delete result._count;delete result._warnings;showPreview(result);download.hidden=false;convert.hidden=true}catch(e){setStatus("err","❌ Conversion failed.",e.message)}}
+convert.onclick=()=>{try{const converted=convertOld(d);result=converted.data;setStatus("ok","✓ Conversion successful",converted.count+" controls converted");warnings.innerHTML="";for(const w of converted.warnings){const x=document.createElement("div");x.className="warning";x.textContent="⚠ "+w;warnings.appendChild(x)}showPreview(result);download.hidden=false;convert.hidden=true}catch(e){setStatus("err","❌ Conversion failed.",e.message)}}
 }).catch(()=>setStatus("err","❌ Invalid layout file.","The file could not be read."))}
 function isNew(d){return d&&d.editorVersion===12&&d.info&&Array.isArray(d.layers)&&Array.isArray(d.styles)}
 function isOld(d){return d&&Array.isArray(d.mControlDataList)}
@@ -67,7 +67,7 @@ function convertOld(d){
  }
  if((d.mDrawerDataList||[]).length)w.push("Legacy control drawers are not directly supported by Zalith 2 and were not converted.");
  const i=d.mControlInfoDataList||{},r={info:{name:tr(i.name&&i.name!=="null"?i.name:base),author:tr(i.author&&i.author!=="null"?i.author:""),description:tr(i.desc&&i.desc!=="null"?i.desc:""),versionCode:0,versionName:String(i.version&&i.version!=="null"?i.version:"1.0")},layers:[{name:"converted",uuid:uid(),hide:false,hideWhenMouse:true,hideWhenGamepad:true,visibilityType:"always",normalButtons:normal,textBoxes:[],joystickButtons:joysticks}],styles,joystickStyles:[],editorVersion:12};
- Object.defineProperty(r,"_count",{value:normal.length+joysticks.length,enumerable:false});Object.defineProperty(r,"_warnings",{value:w,enumerable:false});return r
+ return{data:r,count:normal.length+joysticks.length,warnings:w}
 }
 function showPreview(d){screen.innerHTML="";for(const l of d.layers||[])for(const b of(l.normalButtons||[]).slice(0,80)){const e=document.createElement("div");e.className="control";e.textContent=b.text?.default||"";e.style.left=(b.position.x/100)+"%";e.style.top=(b.position.y/100)+"%";e.style.width=Math.max(2,(b.buttonSize?.widthPercentage||500)/100)+"%";e.style.height=Math.max(2,(b.buttonSize?.heightPercentage||500)/100)+"%";screen.appendChild(e)}preview.hidden=false}
 download.onclick=()=>{if(!result)return;const blob=new Blob([JSON.stringify(result,null,2)],{type:"application/json"}),u=URL.createObjectURL(blob),a=document.createElement("a");a.href=u;a.download=base+"-zalith2.json";document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(u)}
