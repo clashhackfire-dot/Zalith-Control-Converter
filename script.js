@@ -14,16 +14,61 @@ convert.onclick=()=>{try{result=convertOld(d);setStatus("ok","✓ Conversion suc
 function isNew(d){return d&&d.editorVersion===12&&d.info&&Array.isArray(d.layers)&&Array.isArray(d.styles)}
 function isOld(d){return d&&Array.isArray(d.mControlDataList)}
 function count(d){return(d.layers||[]).reduce((n,l)=>n+(l.normalButtons?.length||0)+(l.textBoxes?.length||0)+(l.joystickButtons?.length||0),0)}
-const K={32:"GLFW_KEY_SPACE",65:"GLFW_KEY_A",66:"GLFW_KEY_B",67:"GLFW_KEY_C",68:"GLFW_KEY_D",69:"GLFW_KEY_E",70:"GLFW_KEY_F",71:"GLFW_KEY_G",72:"GLFW_KEY_H",73:"GLFW_KEY_I",74:"GLFW_KEY_J",75:"GLFW_KEY_K",76:"GLFW_KEY_L",77:"GLFW_KEY_M",78:"GLFW_KEY_N",79:"GLFW_KEY_O",80:"GLFW_KEY_P",81:"GLFW_KEY_Q",82:"GLFW_KEY_R",83:"GLFW_KEY_S",84:"GLFW_KEY_T",85:"GLFW_KEY_U",86:"GLFW_KEY_V",87:"GLFW_KEY_W",88:"GLFW_KEY_X",89:"GLFW_KEY_Y",90:"GLFW_KEY_Z",256:"GLFW_KEY_ESCAPE",257:"GLFW_KEY_ENTER",258:"GLFW_KEY_TAB",259:"GLFW_KEY_BACKSPACE",260:"GLFW_KEY_INSERT",261:"GLFW_KEY_DELETE",262:"GLFW_KEY_RIGHT",263:"GLFW_KEY_LEFT",264:"GLFW_KEY_DOWN",265:"GLFW_KEY_UP",290:"GLFW_KEY_F1",291:"GLFW_KEY_F2",292:"GLFW_KEY_F3",293:"GLFW_KEY_F4",294:"GLFW_KEY_F5",295:"GLFW_KEY_F6",296:"GLFW_KEY_F7",297:"GLFW_KEY_F8",298:"GLFW_KEY_F9",299:"GLFW_KEY_F10",300:"GLFW_KEY_F11",301:"GLFW_KEY_F12",340:"GLFW_KEY_LEFT_SHIFT",341:"GLFW_KEY_LEFT_CONTROL",342:"GLFW_KEY_LEFT_ALT",344:"GLFW_KEY_RIGHT_SHIFT",345:"GLFW_KEY_RIGHT_CONTROL",346:"GLFW_KEY_RIGHT_ALT"};
+const K={32:"GLFW_KEY_SPACE",44:"GLFW_KEY_COMMA",45:"GLFW_KEY_MINUS",46:"GLFW_KEY_PERIOD",61:"GLFW_KEY_EQUAL",65:"GLFW_KEY_A",66:"GLFW_KEY_B",67:"GLFW_KEY_C",68:"GLFW_KEY_D",69:"GLFW_KEY_E",70:"GLFW_KEY_F",71:"GLFW_KEY_G",72:"GLFW_KEY_H",73:"GLFW_KEY_I",74:"GLFW_KEY_J",75:"GLFW_KEY_K",76:"GLFW_KEY_L",77:"GLFW_KEY_M",78:"GLFW_KEY_N",79:"GLFW_KEY_O",80:"GLFW_KEY_P",81:"GLFW_KEY_Q",82:"GLFW_KEY_R",83:"GLFW_KEY_S",84:"GLFW_KEY_T",85:"GLFW_KEY_U",86:"GLFW_KEY_V",87:"GLFW_KEY_W",88:"GLFW_KEY_X",89:"GLFW_KEY_Y",90:"GLFW_KEY_Z",256:"GLFW_KEY_ESCAPE",257:"GLFW_KEY_ENTER",258:"GLFW_KEY_TAB",259:"GLFW_KEY_BACKSPACE",260:"GLFW_KEY_INSERT",261:"GLFW_KEY_DELETE",262:"GLFW_KEY_RIGHT",263:"GLFW_KEY_LEFT",264:"GLFW_KEY_DOWN",265:"GLFW_KEY_UP",290:"GLFW_KEY_F1",291:"GLFW_KEY_F2",292:"GLFW_KEY_F3",293:"GLFW_KEY_F4",294:"GLFW_KEY_F5",295:"GLFW_KEY_F6",296:"GLFW_KEY_F7",297:"GLFW_KEY_F8",298:"GLFW_KEY_F9",299:"GLFW_KEY_F10",300:"GLFW_KEY_F11",301:"GLFW_KEY_F12",340:"GLFW_KEY_LEFT_SHIFT",341:"GLFW_KEY_LEFT_CONTROL",342:"GLFW_KEY_LEFT_ALT",344:"GLFW_KEY_RIGHT_SHIFT",345:"GLFW_KEY_RIGHT_CONTROL",346:"GLFW_KEY_RIGHT_ALT"};
+const SPECIAL={"-1":{type:"launcher_event",key:"launcher.event.switch_ime"},"-2":{type:"launcher_event",key:"launcher.event.switch_menu"},"-3":{type:"launcher_event",key:"GLFW_MOUSE_BUTTON_LEFT"},"-4":{type:"launcher_event",key:"GLFW_MOUSE_BUTTON_RIGHT"},"-5":null,"-6":{type:"launcher_event",key:"GLFW_MOUSE_BUTTON_MIDDLE"},"-7":{type:"launcher_event",key:"launcher.event.scroll_up"},"-8":{type:"launcher_event",key:"launcher.event.scroll_down"},"-9":{type:"launcher_event",key:"launcher.event.switch_menu"}};
 function uid(){return crypto.randomUUID?crypto.randomUUID().replaceAll("-",""):Math.random().toString(36).slice(2)+Date.now()}
 function tr(v){return{default:v==null||v==="null"?"":String(v),matchQueue:[]}}
-function position(b,w){let x=Number(b.x),y=Number(b.y);if(!Number.isFinite(x)){w.push("A control has no numeric x position; it was set to 0.");x=0}if(!Number.isFinite(y)){w.push("A control has no numeric y position; it was set to 0.");y=0}return{x:Math.max(0,Math.min(10000,Math.round(x))),y:Math.max(0,Math.min(10000,Math.round(y)))}}
-function events(b,w){const a=[];for(const raw of b.keycodes||[]){const n=Number(raw);if(K[n])a.push({type:"key",key:K[n]});else if(n<0)w.push("A control uses unsupported special keycode "+n+".");else if(n!==0)w.push("A control uses unknown GLFW keycode "+n+".")}return a}
-function convertOld(d){const w=[],styles=[],normal=[];for(const b of d.mControlDataList||[]){const sid=uid(),ev=events(b,w),op=Number(b.opacity);const alpha=Number.isFinite(op)?op:1;styles.push({name:"Converted "+sid.slice(0,8),uuid:sid,animateSwap:false,commonStyle:true,lightStyle:{alpha,pressedAlpha:alpha,backgroundColor:0x4d000000,pressedBackgroundColor:0x4d000000,contentColor:0xffffffff,pressedContentColor:0xffffffff,borderWidth:0,pressedBorderWidth:0,borderColor:0xffffffff,pressedBorderColor:0xffffffff,borderRadius:{topStart:0,topEnd:0,bottomEnd:0,bottomStart:0},pressedBorderRadius:{topStart:0,topEnd:0,bottomEnd:0,bottomStart:0}},darkStyle:null});styles[styles.length-1].darkStyle=styles[styles.length-1].lightStyle;
-normal.push({text:tr(b.name),uuid:uid(),position:position(b,w),buttonSize:{type:"percentage",widthDp:Number(b.width)||500,heightDp:Number(b.height)||500,widthPercentage:Math.max(100,Math.round((Number(b.width)||500)/10000*10000)),heightPercentage:Math.max(100,Math.round((Number(b.height)||500)/10000*10000)),widthReference:"screen_height",heightReference:"screen_height"},buttonStyle:sid,visibilityType:b.displayInGame&&b.displayInMenu?"always":b.displayInGame?"in_game":"in_menu",clickEvents:ev,isSwipple:!!b.isSwipeable,isPenetrable:!!b.passThruEnabled,isToggleable:!!b.isToggle})}
-if((d.mDrawerDataList||[]).length)w.push("Old control drawers are not represented as separate Zalith 2 drawer widgets.");
-const i=d.mControlInfoDataList||{},r={info:{name:tr(i.name||base),author:tr(i.author||""),description:tr(i.desc||""),versionCode:0,versionName:String(i.version||"1.0")},layers:[{name:"converted",uuid:uid(),hide:false,hideWhenMouse:true,hideWhenGamepad:true,visibilityType:"always",normalButtons:normal,textBoxes:[],joystickButtons:[]}],styles,joystickStyles:[],editorVersion:12};
-Object.defineProperty(r,"_count",{value:normal.length,enumerable:false});Object.defineProperty(r,"_warnings",{value:w,enumerable:false});return r}
+function clamp(n,a,b){return Math.max(a,Math.min(b,n))}
+function evalExpr(s,b){
+ if(typeof s==="number")return s;
+ if(typeof s!=="string"||!s.trim())return NaN;
+ const W=10000,H=10000,width=Number(b.width)||50,height=Number(b.height)||50,margin=0,scale=1;
+ let e=s.replace(/\$\{screen_width\}/g,String(W)).replace(/\$\{screen_height\}/g,String(H)).replace(/\$\{width\}/g,String(width)).replace(/\$\{height\}/g,String(height)).replace(/\$\{margin\}/g,String(margin)).replace(/\$\{preferred_scale\}/g,String(scale)).replace(/\$\{right\}/g,String(W-width)).replace(/\$\{bottom\}/g,String(H-height)).replace(/\$\{top\}/g,"0").replace(/\$\{left\}/g,"0");
+ e=e.replace(/px\(([-+]?(?:\d+(?:\.\d*)?|\.\d+))\)/g,"($1)");
+ if(!/^[0-9eE+\-*/().\s]+$/.test(e))return NaN;
+ try{return Function('"use strict";return('+e+')')()}catch(_){return NaN}
+}
+function position(b,w){
+ const x=evalExpr(b.dynamicX,b),y=evalExpr(b.dynamicY,b);
+ if(!Number.isFinite(x)||!Number.isFinite(y))w.push("A control has an unsupported dynamic position expression; its position was estimated.");
+ return{x:Math.round(clamp(Number.isFinite(x)?x:5000,0,10000)),y:Math.round(clamp(Number.isFinite(y)?y:5000,0,10000))}
+}
+function events(b,w){
+ const a=[];
+ for(const raw of b.keycodes||[]){const n=Number(raw);if(!n)continue;
+  if(K[n])a.push({type:"key",key:K[n]});
+  else if(n<0&&SPECIAL[String(n)])a.push(SPECIAL[String(n)]);
+  else if(n===-5)w.push("The legacy virtual-mouse control has no direct Zalith 2 click-event equivalent.");
+  else if(n<0)w.push("A legacy special keycode "+n+" could not be mapped.");
+  else w.push("A control uses unknown GLFW keycode "+n+".")
+ }
+ return a
+}
+function styleFor(b,sid){
+ const alpha=Number.isFinite(Number(b.opacity))?clamp(Number(b.opacity),0,1):1;
+ const bg=Number.isFinite(Number(b.bgColor))?Number(b.bgColor)>>>0:0x4d000000;
+ const stroke=Number.isFinite(Number(b.strokeColor))?Number(b.strokeColor)>>>0:0xffffffff;
+ const sw=Number.isFinite(Number(b.strokeWidth))?Math.max(0,Number(b.strokeWidth)):0;
+ const radius=Number.isFinite(Number(b.cornerRadius))?Math.max(0,Number(b.cornerRadius)):0;
+ const r={topStart:radius,topEnd:radius,bottomEnd:radius,bottomStart:radius};
+ return{name:"Converted "+sid.slice(0,8),uuid:sid,animateSwap:false,commonStyle:true,lightStyle:{alpha,pressedAlpha:Math.min(1,alpha+0.1),backgroundColor:bg,pressedBackgroundColor:bg,contentColor:0xffffffff,pressedContentColor:0xffffffff,borderWidth:sw,pressedBorderWidth:sw,borderColor:stroke,pressedBorderColor:stroke,borderRadius:r,pressedBorderRadius:r},darkStyle:null}
+}
+function buttonSize(b){const wd=Math.max(5,Number(b.width)||50),hd=Math.max(5,Number(b.height)||50);return{type:"dp",widthDp:wd,heightDp:hd,widthPercentage:100,heightPercentage:100,widthReference:"screen_height",heightReference:"screen_height"}}
+function visibility(b){return b.displayInGame&&b.displayInMenu?"always":b.displayInGame?"in_game":"in_menu"}
+function convertOld(d){
+ const w=[],styles=[],normal=[],joysticks=[];
+ for(const b of d.mControlDataList||[]){
+  const sid=uid(),ev=events(b,w);styles.push(styleFor(b,sid));
+  normal.push({text:tr(b.name),uuid:uid(),position:position(b,w),buttonSize:buttonSize(b),buttonStyle:sid,visibilityType:visibility(b),clickEvents:ev,isSwipple:!!b.isSwipeable,isPenetrable:!!b.passThruEnabled,isToggleable:!!b.isToggle})
+ }
+ for(const j of d.mJoystickDataList||[]){
+  const size=Math.max(20,Number(j.width)||Number(j.height)||200);
+  joysticks.push({uuid:uid(),position:position(j,w),sizeType:"dp",sizeDp:size,sizePercentage:2000,visibilityType:visibility(j),joystickStyleId:null,deadZoneRatio:0.5,lockThreshold:0.3,canLock:!!j.forwardLock,triggerMode:"drag",directionEvents:{north:[{type:"key",key:"GLFW_KEY_W"}],north_east:[{type:"key",key:"GLFW_KEY_W"},{type:"key",key:"GLFW_KEY_D"}],north_west:[{type:"key",key:"GLFW_KEY_W"},{type:"key",key:"GLFW_KEY_A"}],south:[{type:"key",key:"GLFW_KEY_S"}],south_east:[{type:"key",key:"GLFW_KEY_S"},{type:"key",key:"GLFW_KEY_D"}],south_west:[{type:"key",key:"GLFW_KEY_S"},{type:"key",key:"GLFW_KEY_A"}],east:[{type:"key",key:"GLFW_KEY_D"}],west:[{type:"key",key:"GLFW_KEY_A"}]},lockEvents:[{type:"key",key:"GLFW_KEY_LEFT_CONTROL"}]})
+ }
+ if((d.mDrawerDataList||[]).length)w.push("Legacy control drawers are not directly supported by Zalith 2 and were not converted.");
+ const i=d.mControlInfoDataList||{},r={info:{name:tr(i.name&&i.name!=="null"?i.name:base),author:tr(i.author&&i.author!=="null"?i.author:""),description:tr(i.desc&&i.desc!=="null"?i.desc:""),versionCode:0,versionName:String(i.version&&i.version!=="null"?i.version:"1.0")},layers:[{name:"converted",uuid:uid(),hide:false,hideWhenMouse:true,hideWhenGamepad:true,visibilityType:"always",normalButtons:normal,textBoxes:[],joystickButtons:joysticks}],styles,joystickStyles:[],editorVersion:12};
+ Object.defineProperty(r,"_count",{value:normal.length+joysticks.length,enumerable:false});Object.defineProperty(r,"_warnings",{value:w,enumerable:false});return r
+}
 function showPreview(d){screen.innerHTML="";for(const l of d.layers||[])for(const b of(l.normalButtons||[]).slice(0,80)){const e=document.createElement("div");e.className="control";e.textContent=b.text?.default||"";e.style.left=(b.position.x/100)+"%";e.style.top=(b.position.y/100)+"%";e.style.width=Math.max(2,(b.buttonSize?.widthPercentage||500)/100)+"%";e.style.height=Math.max(2,(b.buttonSize?.heightPercentage||500)/100)+"%";screen.appendChild(e)}preview.hidden=false}
 download.onclick=()=>{if(!result)return;const blob=new Blob([JSON.stringify(result,null,2)],{type:"application/json"}),u=URL.createObjectURL(blob),a=document.createElement("a");a.href=u;a.download=base+"-zalith2.json";document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(u)}
 })();
