@@ -74,16 +74,17 @@ function styleFor(b,sid){
  return{name:"Converted "+sid.slice(0,8),uuid:sid,animateSwap:false,commonStyle:true,lightStyle:{alpha,pressedAlpha:Math.min(1,alpha+0.1),backgroundColor:bg,pressedBackgroundColor:bg,contentColor:0xffffffff,pressedContentColor:0xffffffff,borderWidth:sw,pressedBorderWidth:sw,borderColor:stroke,pressedBorderColor:stroke,borderRadius:r,pressedBorderRadius:r},darkStyle:null}
 }
 function buttonSize(b){
- const m=referenceMetrics();
  const layoutScale=Number(source?.scaledAt);
  const factor=Number.isFinite(layoutScale)&&layoutScale>0?100/layoutScale:1;
  const wd=Math.max(5,(Number(b.width)||50)*factor);
  const hd=Math.max(5,(Number(b.height)||50)*factor);
  return{
-  type:"percentage",
-  widthPercentage:Math.round(clamp(wd/m.W*10000,10,10000)),
-  heightPercentage:Math.round(clamp(hd/m.H*10000,10,10000)),
-  widthReference:"screen_width",
+  type:"dp",
+  widthDp:wd,
+  heightDp:hd,
+  widthPercentage:Math.max(100,Math.min(10000,Math.round(wd/50*1400))),
+  heightPercentage:Math.max(100,Math.min(10000,Math.round(hd/50*1400))),
+  widthReference:"screen_height",
   heightReference:"screen_height"
  }
 }
@@ -97,13 +98,13 @@ function convertOld(d){
  const joystickStyleId=uid();
  const joysticksource=d.mJoystickDataList?.[0]||{};
  const joystickAlpha=Math.max(0,Math.min(1,Number(joysticksource.opacity)||1));
- styles.push({name:"Converted Joystick",uuid:joystickStyleId,commonStyle:true,lightStyle:{alpha:joystickAlpha,backgroundColor:1291845633,joystickColor:2147483775,joystickCanLockColor:2164195583,joystickLockedColor:2164195327,lockMarkColor:4294967295,borderWidthRatio:0,borderColor:4294967295,backgroundShape:50,joystickShape:50,joystickSize:0.5},darkStyle:{alpha:joystickAlpha,backgroundColor:1291845633,joystickColor:2147483775,joystickCanLockColor:2164195583,joystickLockedColor:2164195327,lockMarkColor:4294967295,borderWidthRatio:0,borderColor:4294967295,backgroundShape:50,joystickShape:50,joystickSize:0.5}});
+ const joystickStyle={name:"Converted Joystick",uuid:joystickStyleId,commonStyle:true,lightStyle:{alpha:joystickAlpha,backgroundColor:1291845633,joystickColor:2147483775,joystickCanLockColor:2164195583,joystickLockedColor:2164195327,lockMarkColor:4294967295,borderWidthRatio:0,borderColor:4294967295,backgroundShape:50,joystickShape:50,joystickSize:0.5},darkStyle:{alpha:joystickAlpha,backgroundColor:1291845633,joystickColor:2147483775,joystickCanLockColor:2164195583,joystickLockedColor:2164195327,lockMarkColor:4294967295,borderWidthRatio:0,borderColor:4294967295,backgroundShape:50,joystickShape:50,joystickSize:0.5}};
  for(const j of d.mJoystickDataList||[]){
   const size=Math.max(20,Number(j.width)||Number(j.height)||200);
   joysticks.push({uuid:uid(),position:position(j,w),sizeType:"dp",sizeDp:size,sizePercentage:Math.max(2000,Math.min(10000,Math.round(size/1000*10000))),visibilityType:visibility(j),joystickStyleId,deadZoneRatio:0.5,lockThreshold:0.3,canLock:!!j.forwardLock,triggerMode:"DRAG",directionEvents:{North:[{type:"key",key:"GLFW_KEY_W"}],NorthEast:[{type:"key",key:"GLFW_KEY_W"},{type:"key",key:"GLFW_KEY_D"}],NorthWest:[{type:"key",key:"GLFW_KEY_W"},{type:"key",key:"GLFW_KEY_A"}],South:[{type:"key",key:"GLFW_KEY_S"}],SouthEast:[{type:"key",key:"GLFW_KEY_S"},{type:"key",key:"GLFW_KEY_D"}],SouthWest:[{type:"key",key:"GLFW_KEY_S"},{type:"key",key:"GLFW_KEY_A"}],East:[{type:"key",key:"GLFW_KEY_D"}],West:[{type:"key",key:"GLFW_KEY_A"}]},lockEvents:[{type:"key",key:"GLFW_KEY_LEFT_CONTROL"}]});
  }
  if((d.mDrawerDataList||[]).length)w.push("Legacy control drawers are not directly supported by Zalith 2 and were not converted.");
- const i=d.mControlInfoDataList||{},r={info:{name:tr(i.name&&i.name!=="null"?i.name:base),author:tr(i.author&&i.author!=="null"?i.author:""),description:tr(i.desc&&i.desc!=="null"?i.desc:""),versionCode:0,versionName:String(i.version&&i.version!=="null"?i.version:"1.0")},layers:[{name:"converted",uuid:uid(),hide:false,hideWhenMouse:true,hideWhenGamepad:true,visibilityType:"always",normalButtons:normal,textBoxes:[],joystickButtons:joysticks}],styles,joystickStyles:[],editorVersion:12};
+ const i=d.mControlInfoDataList||{},r={info:{name:tr(i.name&&i.name!=="null"?i.name:base),author:tr(i.author&&i.author!=="null"?i.author:""),description:tr(i.desc&&i.desc!=="null"?i.desc:""),versionCode:0,versionName:String(i.version&&i.version!=="null"?i.version:"1.0")},layers:[{name:"converted",uuid:uid(),hide:false,hideWhenMouse:true,hideWhenGamepad:true,visibilityType:"always",normalButtons:normal,textBoxes:[],joystickButtons:joysticks}],styles,joystickStyles:[joystickStyle],editorVersion:12};
  return{data:r,count:normal.length+joysticks.length,warnings:w}
 }
 function showPreview(d){screen.innerHTML="";for(const l of d.layers||[])for(const b of(l.normalButtons||[]).slice(0,80)){const e=document.createElement("div");e.className="control";e.textContent=b.text?.default||"";e.style.left=(b.position.x/100)+"%";e.style.top=(b.position.y/100)+"%";e.style.width=Math.max(2,(b.buttonSize?.widthPercentage||500)/100)+"%";e.style.height=Math.max(2,(b.buttonSize?.heightPercentage||500)/100)+"%";screen.appendChild(e)}preview.hidden=false}
