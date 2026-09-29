@@ -20,32 +20,31 @@ function uid(){return crypto.randomUUID?crypto.randomUUID().replaceAll("-",""):M
 function tr(v){return{default:v==null||v==="null"?"":String(v),matchQueue:[]}}
 function clamp(n,a,b){return Math.max(a,Math.min(b,n))}
 function referenceMetrics(){
- const d=Math.max(1,Math.min(4,Number(window.devicePixelRatio)||3));
- const a=Math.max(1,Number(window.innerWidth)||360)*d;
- const b=Math.max(1,Number(window.innerHeight)||800)*d;
- return{W:Math.max(a,b),H:Math.min(a,b),density:d};
+ const a=Math.max(1,Number(window.innerWidth)||360);
+ const b=Math.max(1,Number(window.innerHeight)||800);
+ return{W:Math.max(a,b),H:Math.min(a,b)};
 }
 function evalExpr(s,b){
  if(typeof s==="number")return s;
  if(typeof s!=="string"||!s.trim())return NaN;
- const m=referenceMetrics(),W=m.W,H=m.H,density=m.density;
- const width=(Number(b.width)||50)*density;
- const height=(Number(b.height)||50)*density;
- const margin=2*density;
- const scale=100;
+ const m=referenceMetrics(),W=m.W,H=m.H;
+ const width=Number(b.width)||50;
+ const height=Number(b.height)||50;
+ const margin=2;
+ const scale=Number(source?.scaledAt)||100;
  let e=s.replace(/\$\{screen_width\}/g,String(W)).replace(/\$\{screen_height\}/g,String(H))
   .replace(/\$\{width\}/g,String(width)).replace(/\$\{height\}/g,String(height))
   .replace(/\$\{margin\}/g,String(margin)).replace(/\$\{preferred_scale\}/g,String(scale))
   .replace(/\$\{right\}/g,String(W-width)).replace(/\$\{bottom\}/g,String(H-height))
   .replace(/\$\{top\}/g,"0").replace(/\$\{left\}/g,"0");
- e=e.replace(/px\(([-+]?(?:\d+(?:\.\d*)?|\.\d+))\)/g,"($1*"+density+")");
+ e=e.replace(/px\(([-+]?(?:\d+(?:\.\d*)?|\.\d+))\)/g,"($1)");
  if(!/^[0-9eE+\-*/().\s*]+$/.test(e))return NaN;
  try{return Function('"use strict";return('+e+')')()}catch(_){return NaN}
 }
 function position(b,w){
  const m=referenceMetrics();
- const width=(Number(b.width)||50)*m.density;
- const height=(Number(b.height)||50)*m.density;
+ const width=Math.max(1,Number(b.width)||50);
+ const height=Math.max(1,Number(b.height)||50);
  const x=evalExpr(b.dynamicX,b),y=evalExpr(b.dynamicY,b);
  if(!Number.isFinite(x)||!Number.isFinite(y))w.push("A control has an unsupported dynamic position expression; its position was estimated.");
  const availableW=Math.max(1,m.W-width),availableH=Math.max(1,m.H-height);
@@ -75,11 +74,18 @@ function styleFor(b,sid){
  return{name:"Converted "+sid.slice(0,8),uuid:sid,animateSwap:false,commonStyle:true,lightStyle:{alpha,pressedAlpha:Math.min(1,alpha+0.1),backgroundColor:bg,pressedBackgroundColor:bg,contentColor:0xffffffff,pressedContentColor:0xffffffff,borderWidth:sw,pressedBorderWidth:sw,borderColor:stroke,pressedBorderColor:stroke,borderRadius:r,pressedBorderRadius:r},darkStyle:null}
 }
 function buttonSize(b){
+ const m=referenceMetrics();
  const layoutScale=Number(source?.scaledAt);
  const factor=Number.isFinite(layoutScale)&&layoutScale>0?100/layoutScale:1;
  const wd=Math.max(5,(Number(b.width)||50)*factor);
  const hd=Math.max(5,(Number(b.height)||50)*factor);
- return{type:"dp",widthDp:wd,heightDp:hd,widthPercentage:1400,heightPercentage:1400,widthReference:"screen_height",heightReference:"screen_height"}
+ return{
+  type:"percentage",
+  widthPercentage:Math.round(clamp(wd/m.W*10000,10,10000)),
+  heightPercentage:Math.round(clamp(hd/m.H*10000,10,10000)),
+  widthReference:"screen_width",
+  heightReference:"screen_height"
+ }
 }
 function visibility(b){return b.displayInGame&&b.displayInMenu?"always":b.displayInGame?"in_game":"in_menu"}
 function convertOld(d){
